@@ -11,11 +11,23 @@ interface Args {
 const MAX_RETRIES = 5;
 const BASE_DELAY = 1000;
 
+function getBaseUrl(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  if (!baseUrl) {
+    throw new Error(
+      "NEXT_PUBLIC_API_BASE_URL is not defined. Set it in Vercel Environment Variables."
+    );
+  }
+
+  return baseUrl;
+}
+
 export function useCampaignInsightsStream({
   campaignId,
   initialInsights,
 }: Args) {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL!;
+  const BASE_URL = getBaseUrl();
 
   const [insights, setInsights] = useState<Insights>(initialInsights);
   const [status, setStatus] = useState<StreamStatus>("idle");

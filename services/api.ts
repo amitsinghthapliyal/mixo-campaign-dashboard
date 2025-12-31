@@ -2,13 +2,19 @@ import { Campaign, CampaignResponse } from "@/types/campaign";
 import { CampaignInsightsResponse } from "@/types/campaignInsights";
 import { InsightsResponse } from "@/types/insights";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+function getBaseUrl(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-if (!BASE_URL) {
-  throw new Error(
-    "NEXT_PUBLIC_API_BASE_URL is not defined. Set it in Vercel Environment Variables."
-  );
+  if (!baseUrl) {
+    throw new Error(
+      "NEXT_PUBLIC_API_BASE_URL is not defined. Set it in Vercel Environment Variables."
+    );
+  }
+
+  return baseUrl;
 }
+
+const BASE_URL = getBaseUrl();
 
 type ApiErrorPayload = {
   message?: string;

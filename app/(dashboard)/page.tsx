@@ -2,6 +2,7 @@ import { InsightCard } from "@/components/InsightCard";
 import { fetchCampaignInsights } from "@/services/api";
 import { formatCurrency, formatNumber, formatPercent } from "@/lib/format";
 import { PageHeader } from "@/components/PageHeader";
+export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const insights = await fetchCampaignInsights();
