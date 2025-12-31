@@ -1,24 +1,36 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Screenshots
 
-First, run the development server:
+![App Screenshot](./screenshots/Screenshot1.png)
+![App Screenshot](./screenshots/Screenshot2.png)
+![App Screenshot](./screenshots/Screenshot3.png)
+
+## Run the project Locally
+
+This guide explains how to set up and run the project locally.
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/amitsinghthapliyal/mixo-campaign-dashboard.git
+cd mixo-campaign-dashboard
+npm install
+```
+
+Create a file named .env.local in the project root
+
+```bash
+NEXT_PUBLIC_API_BASE_URL= <Replace the URL with your backend API base URL.>
+```
+
+Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app will be available at:http://localhost:3000
 
 ## Learn More
 
