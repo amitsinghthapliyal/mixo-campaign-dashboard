@@ -1,10 +1,14 @@
-export const formatNumber = (value: number) =>
-  new Intl.NumberFormat("en-US").format(value);
+export function formatNumber(value?: number | null) {
+  if (value == null || Number.isNaN(value)) return "—";
+  return value.toLocaleString("en-US");
+}
 
-export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
+export function formatCurrency(value?: number | null) {
+  if (value == null || Number.isNaN(value)) return "—";
+  return `$${value.toFixed(2)}`;
+}
 
-export const formatPercent = (value: number) => `${value.toFixed(2)}%`;
+export function formatPercent(value?: number | null) {
+  if (value == null || Number.isNaN(value)) return "—";
+  return `${value.toFixed(2)}%`;
+}

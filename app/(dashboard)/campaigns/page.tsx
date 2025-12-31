@@ -5,8 +5,8 @@ import { fetchCampaigns } from "@/services/api";
 export const dynamic = "force-dynamic";
 
 export default async function CampaignPage() {
-  const data = await fetchCampaigns();
-  const { campaigns, total } = data;
+  // const data = await fetchCampaigns();
+  const { campaigns, total } = await fetchCampaigns();
 
   return (
     <>

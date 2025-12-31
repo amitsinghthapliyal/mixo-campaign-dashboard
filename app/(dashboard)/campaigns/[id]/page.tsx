@@ -1,6 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { CampaignStatusBadge } from "@/components/campaigns/CampaignStatusBadge";
-import { fetchCampaignById } from "@/services/api";
+import { fetchCampaignById, fetchCampaignInsightsById } from "@/services/api";
+import { formatCurrency } from "@/lib/format";
+import { Separator } from "@/components/ui/separator";
+import { CampaignInsightsSection } from "@/components/campaigns/CampaignInsightsSection";
+import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -12,53 +16,70 @@ export default async function CampaignDetailPage({
   const { id } = await params;
 
   const campaign = await fetchCampaignById(id);
+  const insights = await fetchCampaignInsightsById(id);
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">{campaign.name}</h1>
+    <>
+      <PageHeader title="Campaign Insights" />
+      <div className="p-6 space-y-8">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight">{campaign.name}</h1>
 
-      <div className="flex items-center gap-4">
-        <CampaignStatusBadge status={campaign.status} />
-        <span className="text-sm text-muted-foreground">
-          Starts:{" "}
-          {new Date(campaign.created_at).toLocaleDateString("en-IN", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
-        </span>
-      </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <CampaignStatusBadge status={campaign.status} />
 
-      <div className="grid grid-cols-2 gap-4 max-w-md">
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">Budget</h3>
-          <p>${campaign.budget.toLocaleString()}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Daily Budget
-          </h3>
-          <p>${campaign.daily_budget.toLocaleString()}</p>
-        </div>
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Platforms
-          </h3>
-          <div className="flex gap-1">
-            {campaign.platforms.map((p) => (
-              <Badge key={p} variant="secondary" className="capitalize">
-                {p}
-              </Badge>
-            ))}
+            <span className="text-sm text-muted-foreground">
+              Started on{" "}
+              {new Date(campaign.created_at).toLocaleDateString("en-IN", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
           </div>
         </div>
+
+        <Separator />
+
+        {/* ================= CAMPAIGN DETAILS ================= */}
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground">
-            Brand ID
-          </h3>
-          <p>{campaign.brand_id}</p>
+          <h2 className="text-lg font-semibold mb-4">Campaign Details</h2>
+
+          <div className="grid grid-cols-2 gap-6 max-w-lg">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Budget</p>
+              <p className="font-medium">{formatCurrency(campaign.budget)}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground">Daily Budget</p>
+              <p className="font-medium">
+                {formatCurrency(campaign.daily_budget)}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground">Platforms</p>
+              <div className="flex gap-2 flex-wrap mt-1">
+                {campaign.platforms.map((p: string) => (
+                  <Badge key={p} variant="secondary" className="capitalize">
+                    {p}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-muted-foreground">Brand ID</p>
+              <p className="font-medium">{campaign.brand_id}</p>
+            </div>
+          </div>
         </div>
+
+        <Separator />
+        {/* ================= PERFORMANCE INSIGHTS ================= */}
+        <CampaignInsightsSection campaignId={id} initialInsights={insights} />
       </div>
-    </div>
+    </>
   );
 }
