@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <div className="p-6 space-y-6">
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: 16 }).map((_, i) => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-4 w-24" />
