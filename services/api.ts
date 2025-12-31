@@ -4,48 +4,47 @@ import { InsightsResponse } from "@/types/insights";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Centralized response handler
-async function handleResponse<T extends object>(res: Response): Promise<T> {
-  let data: T | { message?: string; retry_after?: number; error?: string };
+if (!BASE_URL) {
+  throw new Error(
+    "NEXT_PUBLIC_API_BASE_URL is not defined. Set it in Vercel Environment Variables."
+  );
+}
 
-  try {
-    data = (await res.json()) as T;
-  } catch {
-    const text = await res.text();
-    data = { message: text };
-  }
+type ApiErrorPayload = {
+  message?: string;
+  error?: string;
+  retry_after?: number;
+};
 
-  if (!res.ok) {
-    const status = res.status;
-    const message =
-      "message" in data && data.message
-        ? data.message
-        : "An unexpected error occurred";
+//  RESPONSE HANDLER
+async function handleResponse<T>(res: Response): Promise<T> {
+  const raw = await res.text();
 
-    switch (status) {
-      case 400:
-        throw new Error(`Bad Request: ${message}`);
-      case 404:
-        throw new Error("Resource not found");
-      case 429:
-        const retryAfter = "retry_after" in data ? data.retry_after : 60;
-        throw new Error(
-          `Rate limit exceeded. Retry after ${retryAfter} seconds.`
-        );
-      case 500:
-      case 502:
-      case 503:
-      case 504:
-        throw new Error(`Server error (${status}): ${message}`);
-      default:
-        throw new Error(`Unexpected error (${status}): ${message}`);
+  let parsed: unknown = {};
+  if (raw) {
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = { message: raw };
     }
   }
 
-  return data as T;
+  if (!res.ok) {
+    const payload = parsed as ApiErrorPayload;
+
+    const message =
+      payload.message ??
+      payload.error ??
+      `Request failed with status ${res.status}`;
+
+    throw new Error(`[API ${res.status}] ${message}`);
+  }
+
+  return parsed as T;
 }
 
-// Retry helper for 429
+//  FETCH WITH RETRY
+
 async function fetchWithRetry(
   url: string,
   options: RequestInit = {},
@@ -54,18 +53,50 @@ async function fetchWithRetry(
   let attempt = 0;
 
   while (attempt <= retries) {
-    const res = await fetch(url, options);
+    try {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        },
+      });
 
-    if (res.status !== 429) return res;
+      if (res.status !== 429) {
+        return res;
+      }
 
-    const data = await res.json().catch(() => ({} as { retry_after?: number }));
-    const retryAfter = (data.retry_after || 1) * 1000;
-    console.warn(`Rate limit hit. Retrying after ${retryAfter}ms...`);
-    await new Promise((r) => setTimeout(r, retryAfter));
+      // Rate limit handling
+      const raw = await res.text();
+      let retryAfter = 1;
+
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw) as ApiErrorPayload;
+          retryAfter = parsed.retry_after ?? 1;
+        } catch {
+          retryAfter = 1;
+        }
+      }
+
+      console.warn(
+        `Rate limited (429). Retrying in ${retryAfter}s... [${
+          attempt + 1
+        }/${retries}]`
+      );
+
+      await new Promise((r) => setTimeout(r, retryAfter * 1000));
+    } catch (error) {
+      if (attempt === retries) {
+        console.error(`Network error fetching ${url}`, error);
+        throw new Error(`Network error while fetching ${url}`);
+      }
+    }
+
     attempt++;
   }
 
-  throw new Error("Max retry attempts reached due to rate limiting.");
+  throw new Error("Max retry attempts exceeded.");
 }
 
 // Fetch all campaigns
@@ -73,6 +104,7 @@ export async function fetchCampaigns(): Promise<CampaignResponse> {
   const res = await fetchWithRetry(`${BASE_URL}/campaigns`, {
     cache: "no-store",
   });
+
   return handleResponse<CampaignResponse>(res);
 }
 
@@ -83,15 +115,21 @@ export async function fetchCampaignInsights(): Promise<
   const res = await fetchWithRetry(`${BASE_URL}/campaigns/insights`, {
     cache: "no-store",
   });
+
   const data = await handleResponse<CampaignInsightsResponse>(res);
   return data.insights;
 }
 
 // Fetch campaign by ID
 export async function fetchCampaignById(id: string): Promise<Campaign> {
+  if (!id) {
+    throw new Error("fetchCampaignById: id is required");
+  }
+
   const res = await fetchWithRetry(`${BASE_URL}/campaigns/${id}`, {
     cache: "no-store",
   });
+
   const data = await handleResponse<{ campaign: Campaign }>(res);
   return data.campaign;
 }
@@ -100,9 +138,14 @@ export async function fetchCampaignById(id: string): Promise<Campaign> {
 export async function fetchCampaignInsightsById(
   id: string
 ): Promise<InsightsResponse["insights"]> {
+  if (!id) {
+    throw new Error("fetchCampaignInsightsById: id is required");
+  }
+
   const res = await fetchWithRetry(`${BASE_URL}/campaigns/${id}/insights`, {
     cache: "no-store",
   });
+
   const data = await handleResponse<InsightsResponse>(res);
   return data.insights;
 }

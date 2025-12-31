@@ -12,10 +12,12 @@ export default async function CampaignPage() {
     <>
       <PageHeader title="Campaigns" />
 
-      <div className="space-y-6 p-6">
-        <CampaignStats campaigns={campaigns} />
-        <CampaignTable campaigns={campaigns} total={total} pageSize={5} />
-      </div>
+      {campaigns && (
+        <div className="space-y-6 p-6">
+          <CampaignStats campaigns={campaigns} />
+          <CampaignTable campaigns={campaigns} total={total} pageSize={5} />
+        </div>
+      )}
     </>
   );
 }
